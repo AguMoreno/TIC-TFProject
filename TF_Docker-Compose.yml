@@ -1,0 +1,61 @@
+################################################################################
+# Node-RED Stack or Compose
+################################################################################
+# docker stack deploy node-red --compose-file TF_Docker-Compose.yml
+# docker-compose -f TF_Docker-Compose.yml 
+################################################################################
+version: "3.7"
+
+services:
+  node-red: 
+    depends_on:
+      - influx
+    container_name: nodered_container
+    image: nodered/node-red:latest-10
+    environment:
+      - TZ=America/Argentina
+    ports:
+      - "1880:1880"
+    networks:
+      - tf-net
+    volumes:
+      - node-red-data:/data
+    restart: always
+  
+  grafana:
+    depends_on:
+      - influx
+    container_name: grafana_container
+    image: grafana/grafana:master-ubuntu
+    ports:
+      - "3000:3000"
+    networks:
+      - tf-net
+    volumes:
+      - grafana:/var/lib/grafana
+    restart: always
+
+  influx:
+    container_name: influx_container
+    image: influxdb:latest
+    environment:
+        - INFLUXDB_HTTP_AUTH_ENABLED=TRUE
+        - INFLUXDB_ADMIN_USER=admin
+        - INFLUXDB_ADMIN_PASSWORD=password
+        - INFLUXDB_USER=usuario1
+        - INFLUXDB_DB=iotdb
+    ports:
+      - "8086:8086"
+    networks:
+      - tf-net
+    volumes:
+        - influx-storage:/var/lib/influxdb
+    restart: always
+
+volumes:
+  node-red-data:
+  grafana:
+  influx-storage:
+
+networks:
+  tf-net:
